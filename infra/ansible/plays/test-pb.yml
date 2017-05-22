@@ -1,0 +1,63 @@
+---
+- hosts: "{{ pen }}"
+  strategy: "{{ strat }}"
+  serial: 1
+  
+  tasks:
+  #~ - name: ping tefooken time
+    #~ become: yes
+    #~ timetest:
+
+  #~ - name: include som vars
+    #~ action: include_vars dir=vars
+
+  - name: remove a file
+    file:
+      state: absent
+      path: /tmp/penis/dudu.du
+
+  #~ - name: dockerfile parser test
+    #~ find_used_apps:
+      #~ docker_file: /home/pato/a4e/infra/images/weather/Dockerfile
+      #~ downloads_dict: "{{ download_params }}"
+    #~ register: dparse_out
+  
+  #~ - name: vzem vzem fm
+    #~ get_url: "{{ item }}"
+    #~ with_items: "{{ dparse_out.used_software }}"
+
+    #~ - block:
+  #~ - name: download java test
+    #~ get_url:
+    #~ with_nested:
+      #~ - dparse_out.used_software
+      #~ - download_params[item[0]]
+
+  #~ - name: test template
+    #~ template:
+      #~ src: /home/pato/a4e/infra/images/weather/Dockerfile
+      #~ dest: "{{ lookup('env', 'A4E_PROJ_ROOT') }}/Dockerfile"
+
+  #~ - name: test template
+    #~ template:
+      #~ src: /home/pato/a4e/infra/images/weather/.dockerignore
+      #~ dest: "{{ lookup('env', 'A4E_PROJ_ROOT') }}/.dockerignore"
+
+  
+  #~ - name: sysout dishit
+    #~ local_action: sysout input='{{ dparse_out.used_software }}'
+  
+  #~ - name: deboog
+    #~ debug: var="curracc.acckey"
+
+
+  vars_files:
+  - vars/common-paths.yml
+  - build-conf/software-versions.yml
+  - vars/keys-azure-crypted.yml
+  
+  vars:
+    pen: local
+    img_name: weather
+    strat: linear
+    curracc: nikolov

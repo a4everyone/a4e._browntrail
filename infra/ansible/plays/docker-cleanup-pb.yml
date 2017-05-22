@@ -1,0 +1,34 @@
+---
+- hosts: "swarm_{{ env_level }}"
+
+  tasks:
+  - name: remove stopped containers
+    shell: "docker rm $(docker ps -aqf status=exited)"
+    when: "{{ rm_containers }}"
+    ignore_errors: yes
+
+  - name: remove dangling images
+    shell: "docker rmi $(docker images -qf dangling=true)"
+    when: "{{ rm_images }}"
+    ignore_errors: yes
+
+  - name: remove dangling volumes
+    shell: "docker volume rm $(docker volume ls -qf dangling=true)"
+    when: "{{ rm_volumes }}"
+    ignore_errors: yes
+
+  - name: clean all images of a certain tag
+    shell: 'docker rmi $(docker images | awk ''BEGIN {FS="[ ]{2,}"} {if ($2=="{{ clean_tag }}") print $3}'')'
+    when: "{{ clean_tag | default('') != '' }}"
+    ignore_errors: yes
+
+
+  vars:
+    rm_containers: yes
+    rm_images: yes
+    rm_volumes: no
+
+  vars_prompt:
+    - name: env_level
+      prompt: Select environment
+      private: no

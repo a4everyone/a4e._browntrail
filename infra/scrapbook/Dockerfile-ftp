@@ -1,0 +1,28 @@
+FROM alpine:3.3
+MAINTAINER a4everyone
+
+ARG USER=a4e
+ARG PASSWORD=a4r$ew!wE3q)reQw]4J
+
+RUN apk update &&\
+    apk upgrade && \
+    apk add openssh-sftp-server openssh-client dropbear &&\
+    rm -rf /var/cache/apk/*
+
+RUN mkdir /etc/dropbear \
+    && touch /var/log/lastlog \
+    && adduser -D ${USER} && echo "${USER}:${PASSWORD}" | chpasswd \
+    && mkdir -p /home/${USER}/.ssh
+
+# host keys need to be generated using dropbear. ssh-keygen hasn't been tested
+COPY /.keys/ftp-rsa-host-key /etc/dropbear/dropbear_rsa_host_key
+COPY /.keys/ftp-ecdsa-host-key /etc/dropbear/dropbear_ecdsa_host_key
+
+COPY /.keys/ftp-access-rsa.pub /home/${USER}/.ssh/authorized_keys
+
+RUN chown -R ${USER}:${USER} /home/${USER} \
+    && chmod 600 /home/${USER}/.ssh/authorized_keys \
+    && chmod 700 /home/${USER}/.ssh
+
+ENTRYPOINT ["dropbear"]
+CMD ["-RFEmwgs", "-p", "22"]

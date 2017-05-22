@@ -1,0 +1,55 @@
+---
+- hosts: dbanal
+  strategy: linear
+  serial: 1
+  tasks:
+  - name: update the system
+    become: yes
+    apt: name=aptitude update_cache=yes cache_valid_time=3600
+
+  - name: upgrade the system
+    become: yes
+    apt: upgrade=full autoremove=yes cache_valid_time=3600
+
+  #~ - name: reboot if required
+    #~ become: yes
+#~ #    command: echo penisses
+#~ #    shell: sleep 2 && shutdown -r now "Ansible updates triggered"
+#~ #    shell: test ! -f /var/run/reboot-required || shutdown -r now "Ansible updates triggered"
+    #~ shell: if [ -f /vmlinuz ]; then sleep 2 && shutdown -r now "Ansible updates triggered"; else exit 0; fi
+    #~ async: 1
+    #~ poll: 0
+    #~ register: rebooted
+    #~ changed_when: rebooted.rc == 1
+    #~ ignore_errors: yes
+  - name: install azurefile dockervolumedriver
+    become: yes
+    azuref_dvd: version={{ azuref_dvd_version }} sa_name={{ storage_accounts[storage_account]["name"] }} sa_key={{ storage_accounts[storage_account]["key"] }}
+
+  - name: check if a reboot is required
+    shell: test -f /var/run/reboot-required
+    failed_when: False
+    register: reboot_required
+    changed_when: reboot_required.rc == 0
+    notify: 
+      - reboot
+      - wait server
+
+  handlers:
+  - name: reboot
+    shell: sleep 2 && shutdown -r now "Ansible updates triggered"
+    become: yes
+    async: 1
+    poll: 0
+    ignore_errors: yes
+    
+  - name: wait server
+    local_action: wait_for host={{ inventory_hostname }} state=started port=22 delay=5 timeout=300
+    become: no
+
+  vars_files:
+  - vars/keys-azure-crypted.yml
+
+  vars:
+    storage_account: stage
+    azuref_dvd_version: v0.5.1
